@@ -1,0 +1,8 @@
+data/lassie/images/*
+data/lassie/annotations/*
+data/preprocessed/*
+model_dump/*
+results/*
+main/train.sh
+skeleton.ipynb
+*__pycache__/
