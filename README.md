@@ -1,9 +1,9 @@
 This is not an officially supported Google product.
 
-# LASSIE: Learning Articulated Shapes from Sparse Image Ensemble via 3D Part Discovery (NeurIPS 2022)
-### [Project Page](https://chhankyao.github.io/lassie/) | [Video](https://youtu.be/MhQaHzC4Sn0) | [Paper](https://arxiv.org/abs/2207.03434)
+# Hi-LASSIE: High-Fidelity Articulated Shape and Skeleton Discovery from Sparse Image Ensemble (CVPR 2023)
+### [Project Page](https://chhankyao.github.io/hi-lassie/) | [Video](https://youtu.be/s9FWABEm0WU) | [Paper](https://arxiv.org/abs/2212.11042)
 
-Implementation for LASSIE. A novel method which estimates camera pose, 3D articulation, and part shapes of animal bodies given sparse images in-the-wild.
+Implementation for Hi-LASSIE. A novel method which estimates camera pose, 3D articulation, and part shapes of animal bodies given sparse images in-the-wild.
 
 [Chun-Han Yao](http://people.csail.mit.edu/yzli/)<sup>2</sup>, [Wei-Chih Hung](https://hfslyc.github.io/)<sup>2</sup>, [Yuanzhen Li](http://people.csail.mit.edu/yzli/)<sup>2</sup>, [Michael Rubinstein](http://people.csail.mit.edu/mrub/)<sup>2</sup>, [Ming-Hsuan Yang](http://faculty.ucmerced.edu/mhyang/)<sup>2</sup><br>, [Varun Jampani](https://varunjampani.github.io)<sup>2</sup><br>
 <sup>1</sup>UC Merced, <sup>2</sup>Waymo, <sup>2</sup>Google Research, <sup>2</sup>Yonsei University
@@ -33,7 +33,7 @@ pip install -r requirements.txt
 * Download Pascal-part annotations [here](http://roozbehm.info/pascal-parts/pascal-parts.html) and place them in `data/pascal_part/Annotations_Part/`.
 * Download Pascal-part image sets [here](https://www.dropbox.com/s/u39ygf9jhsg46ld/pascal-part.zip?dl=0) and place them in `data/pascal_part/image-sets/`.
 
-### Our image ensembles (web images)
+### LASSIE image ensembles (web images)
 * Download images [here](https://www.dropbox.com/s/0stdv9pawrz19rb/images.zip?dl=0) and place them in `data/web_images/images/`.
 * Download keypoint annotations [here](https://www.dropbox.com/s/s5ic5nc6ac5kqe1/annotations.zip?dl=0) and place them in `data/web_images/annotations/`.
 
@@ -41,7 +41,7 @@ pip install -r requirements.txt
 * Download pre-trained model [here](https://www.dropbox.com/s/zmgst92vyikpikf/primitive_decoder.pth?dl=0) and place it in `model_dump/`.
 
 
-## LASSIE optimization
+## Hi-LASSIE optimization
 
 To run LASSIE optimization on sparse images of an animal class (e.g. zebra), simply run:
 
@@ -65,10 +65,10 @@ The results will be stored in `results/eval/zebra.txt`.
 ## Citation
 
 ```
-@inproceedings{yao2022-lassie,
-  title         = {{LASSIE}: {L}earning {A}rticulated {S}hape from {S}parse {I}mage {E}nsemble via 3D Part Discovery},
+@inproceedings{yao2023hi-lassie,
+  title         = {Hi-LASSIE: High-Fidelity Articulated Shape and Skeleton Discovery from Sparse Image Ensemble},
   author        = {Yao, Chun-Han and Hung, Wei-Chih and Li, Yuanzhen and Rubinstein, Michael and Yang, Ming-Hsuan and Jampani, Varun},
-  booktitle     = {Advances in Neural Information Processing Systems (NeurIPS)},
-  year          = {2022},
+  booktitle     = {CVPR},
+  year          = {2023},
 }
 ```
