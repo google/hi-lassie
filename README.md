@@ -31,7 +31,7 @@ pip install -r requirements.txt
 ### Pascal-part (horse, cow, sheep)
 * Download Pascal images [here](http://host.robots.ox.ac.uk/pascal/VOC/voc2010/#devkit) and place them in `data/pascal_part/JPEGImages/`.
 * Download Pascal-part annotations [here](http://roozbehm.info/pascal-parts/pascal-parts.html) and place them in `data/pascal_part/Annotations_Part/`.
-* Download Pascal-part image sets [here](https://www.dropbox.com/s/u39ygf9jhsg46ld/pascal-part.zip?dl=0) and place them in `data/pascal_part/image-sets/`.
+* Download Pascal-part image sets following [here](https://github.com/google/lassie) and place them in `data/pascal_part/image-sets/`.
 * Preprocess Pascal-part images and extract DINO features of an animal class (e.g. horse) by running:
 ```
 python preprocess_pascal.py --cls horse
