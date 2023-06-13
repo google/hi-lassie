@@ -3,17 +3,17 @@ This is not an officially supported Google product.
 # Hi-LASSIE: High-Fidelity Articulated Shape and Skeleton Discovery from Sparse Image Ensemble (CVPR 2023)
 ### [Project Page](https://chhankyao.github.io/hi-lassie/) | [Video](https://youtu.be/s9FWABEm0WU) | [Paper](https://arxiv.org/abs/2212.11042)
 
-Implementation for Hi-LASSIE. A novel method which estimates camera pose, 3D articulation, and part shapes of animal bodies given sparse images in-the-wild.
+Implementation for Hi-LASSIE. A novel method which discovers 3D skeleton and detailed shapes of articulated animal bodies from sparse unannotated images in-the-wild.
 
-[Chun-Han Yao](http://people.csail.mit.edu/yzli/)<sup>2</sup>, [Wei-Chih Hung](https://hfslyc.github.io/)<sup>2</sup>, [Yuanzhen Li](http://people.csail.mit.edu/yzli/)<sup>2</sup>, [Michael Rubinstein](http://people.csail.mit.edu/mrub/)<sup>2</sup>, [Ming-Hsuan Yang](http://faculty.ucmerced.edu/mhyang/)<sup>2</sup><br>, [Varun Jampani](https://varunjampani.github.io)<sup>2</sup><br>
-<sup>1</sup>UC Merced, <sup>2</sup>Waymo, <sup>2</sup>Google Research, <sup>2</sup>Yonsei University
+[Chun-Han Yao](https://www.chhankyao.com/)<sup>1</sup>, [Wei-Chih Hung](https://hfslyc.github.io/)<sup>2</sup>, [Yuanzhen Li](http://people.csail.mit.edu/yzli/)<sup>3</sup>, [Michael Rubinstein](http://people.csail.mit.edu/mrub/)<sup>3</sup>, [Ming-Hsuan Yang](http://faculty.ucmerced.edu/mhyang/)<sup>134</sup><br>, [Varun Jampani](https://varunjampani.github.io)<sup>3</sup><br>
+<sup>1</sup>UC Merced, <sup>2</sup>Waymo, <sup>3</sup>Google Research, <sup>4</sup>Yonsei University
 
 ![](figures/teaser.png)
 
 
 ## Setup
 
-A python virtual environment is used for dependency management. The code is tested with Python 3.7, PyTorch 1.11.0, CUDA 11.3. First, to install PyTorch in the virtual environment, run:
+This repo is largely based on [LASSIE](https://github.com/google/lassie). A python virtual environment is used for dependency management. The code is tested with Python 3.7, PyTorch 1.11.0, CUDA 11.3. First, to install PyTorch in the virtual environment, run:
 
 ```
 pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 --extra-index-url https://download.pytorch.org/whl/cu113
@@ -26,7 +26,7 @@ pip install -r requirements.txt
 ```
 
 
-## Download images and annotations
+## Data preparation
 
 ### Pascal-part (horse, cow, sheep)
 * Download Pascal images [here](http://host.robots.ox.ac.uk/pascal/VOC/voc2010/#devkit) and place them in `data/pascal_part/JPEGImages/`.
@@ -45,9 +45,9 @@ python preprocess_pascal.py --cls horse
 python preprocess_lassie.py --cls zebra
 ```
 
-## Preprocess data annd extract skeleton
+## Skeleton extraction
 
-After preprocessing the input data, we extract a 3D skeleton from a specified reference image in the ensemble. For instance, run the following to use the 5th instance as reference:
+After preprocessing the input data, we extract a 3D skeleton from a specified reference image in the ensemble. For instance, run the following to use the 5-th instance as reference:
 ```
 python extract_skeleton.py --cls zebra --inst True --idx 5
 ```
@@ -63,7 +63,7 @@ To run Hi-LASSIE optimization on all images in an ensemble jointly, first run:
 python train.py --cls zebra
 ```
 
-After the joint optimization, we perform instance-specific fine-tuning on a particular instance by:
+After the joint optimization, we perform instance-specific fine-tuning on a particular instance (e.g. 0) by:
 ```
 python train.py --cls zebra --inst True --idx 0
 ```
@@ -79,7 +79,7 @@ Once optimization on all instances is completed, quantitative evaluation can be 
 python eval.py --cls zebra
 ```
 
-For the animal classes in LASSIE dataset, we report the keypoint transfer accuracy (PCK). For Pascal-Part animals, we further calculate the 2D IoU against ground-truth masks.
+For the animal classes in LASSIE dataset, we report the keypoint transfer accuracy (PCK). For Pascal-part animals, we further calculate the 2D IoU against ground-truth masks.
 
 
 ## Citation
