@@ -26,40 +26,60 @@ pip install -r requirements.txt
 ```
 
 
-## Preparing data and pre-trained model
+## Download images and annotations
 
-### Pascal-part
+### Pascal-part (horse, cow, sheep)
 * Download Pascal images [here](http://host.robots.ox.ac.uk/pascal/VOC/voc2010/#devkit) and place them in `data/pascal_part/JPEGImages/`.
 * Download Pascal-part annotations [here](http://roozbehm.info/pascal-parts/pascal-parts.html) and place them in `data/pascal_part/Annotations_Part/`.
 * Download Pascal-part image sets [here](https://www.dropbox.com/s/u39ygf9jhsg46ld/pascal-part.zip?dl=0) and place them in `data/pascal_part/image-sets/`.
+* Preprocess Pascal-part images and extract DINO features of an animal class (e.g. horse) by running:
+```
+python preprocess_pascal.py --cls horse
+```
 
-### LASSIE image ensembles (web images)
-* Download images [here](https://www.dropbox.com/s/0stdv9pawrz19rb/images.zip?dl=0) and place them in `data/web_images/images/`.
-* Download keypoint annotations [here](https://www.dropbox.com/s/s5ic5nc6ac5kqe1/annotations.zip?dl=0) and place them in `data/web_images/annotations/`.
+### LASSIE web images (zebra, giraffe, tiger, elephant, kangaroo, penguin)
+* Download LASSIE images following [here](https://github.com/google/lassie) and place them in `data/lassie/images/`.
+* Download LASSIE annotations following [here](https://github.com/google/lassie) and place them in `data/lassie/annotations/`.
+* Preprocess LASSIE images and extract DINO features of an animal class (e.g. zebra) by running:
+```
+python preprocess_lassie.py --cls zebra
+```
 
-### Pre-trained primitive part decoder
-* Download pre-trained model [here](https://www.dropbox.com/s/zmgst92vyikpikf/primitive_decoder.pth?dl=0) and place it in `model_dump/`.
+## Preprocess data annd extract skeleton
+
+After preprocessing the input data, we extract a 3D skeleton from a specified reference image in the ensemble. For instance, run the following to use the 5th instance as reference:
+```
+python extract_skeleton.py --cls zebra --inst True --idx 5
+```
+
+To obtain better 3D outputs, we recommend selecting an instance where most body parts are visible (e.g. clear side-view). One can also see the DINO feature clustering results in `results/zebra/` to select a good reference or try running the optimization with different skeletons.
 
 
 ## Hi-LASSIE optimization
 
-To run LASSIE optimization on sparse images of an animal class (e.g. zebra), simply run:
+To run Hi-LASSIE optimization on all images in an ensemble jointly, first run:
 
 ```
 python train.py --cls zebra
 ```
 
-The supported animal classes include: zebra, giraffe, tiger, elephant, kangaroo, penguin, horse, cow, sheep. The qualitative results can be found in `results/zebra/`. The optimization settings and initial 3D skeleton can be changed in `main/config.py` and `main/skeleton.py`, respectively. Note that the first time running LASSIE optimization could take a few minutes in the DINO feature clustering step.
+After the joint optimization, we perform instance-specific fine-tuning on a particular instance by:
+```
+python train.py --cls zebra --inst True --idx 0
+```
+
+The qualitative results can be found in `results/zebra/`. The optimization settings can be changed in `main/config.py`.
+
 
 ## Evaluation
 
-Once optimization is completed, quantitative evaluation can be done by running:
+Once optimization on all instances is completed, quantitative evaluation can be done by running:
 
 ```
 python eval.py --cls zebra
 ```
 
-The results will be stored in `results/eval/zebra.txt`.
+For the animal classes in LASSIE dataset, we report the keypoint transfer accuracy (PCK). For Pascal-Part animals, we further calculate the 2D IoU against ground-truth masks.
 
 
 ## Citation
