@@ -32,19 +32,17 @@ def add_pypath(path):
 class Config:
     ## inputs
     dino_model = 'dino_vits8' # 'dino_vits8' / 'dinov2_vits14'
-    ps = 8 if dino_model == 'dino_vits8' else 14
-    crop_size = (ps*128, ps*128)
-    input_size = (384, 384)
-    hw = 64
+    ps = 8 if dino_model == 'dino_vits8' else 14 # patch size
+    crop_size = (ps*128, ps*128) # image resolution for DINO feature extraction
+    input_size = (384, 384) # image resolution for rendering and optimization
+    hw = 64 # height and width of feature maps
     
     # optimization settings
-    use_crf = True
     opt_instance = False
     instance_idx = 0
-    n_clusters = 8
-    d_latent = 64
-    d_feat = 20
-    f_instance = 5
+    n_clusters = 8 # number of DINO feature clusters
+    d_feat = 20 # DINO feature dimension after PCA
+    f_instance = 5 # cutoff frequency for instance-specific deformation
 
     ## directory
     curr_dir = osp.dirname(osp.abspath(__file__))

@@ -27,27 +27,14 @@ from pytorch3d.loss import (
 from config import cfg
 
 
-def part_center_loss(joints, part_centers, part_mapping, bones):
-    bs = joints.shape[0]
-    loss = 0
-    for i in range(part_centers.shape[1]):
-        if (part_mapping == i).sum() > 0:
-            js1 = joints[:,bones[0],:][:,part_mapping==i,:]
-            js2 = joints[:,bones[1],:][:,part_mapping==i,:]
-            center = ((js1 + js2)/2).mean(1)
-            if i == part_mapping[1] or i == part_mapping[-1]:
-                loss += ((center - part_centers[:,i,:2])**2 * part_centers[:,i,2:]).sum() * 0.1
-    return loss / bs
-
+# silhouette loss
 def sil_loss(verts, faces, part_masks, renderer, valid=None):
     mask_gt = (part_masks[:,0,:,:] > 0).float()
     sil = renderer.render(verts, faces)[:,:,:,3]
-    if cfg.opt_instance:
-        loss = (sil - mask_gt)**2 * mask_gt.clamp(0.2, 1)
-    else:
-        loss = (sil - mask_gt)**2
+    loss = (sil - mask_gt)**2
     return loss.mean()
 
+# semantic consistency loss
 def feature_loss(feat_verts, verts, feat_img, masks, w_xy=1):
     bs, nv, df, hw = verts.shape[0], verts.shape[2], feat_img.shape[1], feat_img.shape[-1]
     # image features (feat_img: bs x d x 64 x 64)
@@ -68,15 +55,28 @@ def feature_loss(feat_verts, verts, feat_img, masks, w_xy=1):
     dist2 = knn2.dists[...,0].mean(1)
     return dist1.mean() + dist2.mean() * 0.1
 
-# bone rotation prior (only w.r.t x-axis)
+# part center loss
+def part_center_loss(joints, part_centers, part_mapping, bones):
+    bs = joints.shape[0]
+    loss = 0
+    for i in range(part_centers.shape[1]):
+        if (part_mapping == i).sum() > 0:
+            js1 = joints[:,bones[0],:][:,part_mapping==i,:]
+            js2 = joints[:,bones[1],:][:,part_mapping==i,:]
+            center = ((js1 + js2)/2).mean(1)
+            if i == part_mapping[1] or i == part_mapping[-1]:
+                loss += ((center - part_centers[:,i,:2])**2 * part_centers[:,i,2:]).sum() * 0.1
+    return loss / bs
+
+# bone rotation prior
 def canonical_prior_loss(joints_can, joints_sym, joints_parent, left_joints):
     bs = joints_can.shape[0]
     loss = 0
     loss += joints_can[:,:,0].mean()**2
     loss += ((joints_can[:,:,1:] - joints_can[:,joints_sym,1:])**2).mean()
     loss += ((joints_can[:,:,0] + joints_can[:,joints_sym,0])**2).mean()
-    loss += ((F.relu(0.05-joints_can[:,:,0])**2) * (left_joints > 0).float()).sum()
-    loss += ((F.relu(0.05+joints_can[:,:,0])**2) * (left_joints < 0).float()).sum()
+    # loss += ((F.relu(0.05-joints_can[:,:,0])**2) * (left_joints > 0).float()).sum()
+    # loss += ((F.relu(0.05+joints_can[:,:,0])**2) * (left_joints < 0).float()).sum()
     return loss / bs
 
 # pose deviation from resting pose
@@ -90,10 +90,10 @@ def pose_prior_loss(bone_scale, bone_rot, part_codes):
     loss += (bone_rot[:,:,2]**2).sum() * 0.02 # constrain pitch-axis rotation
     loss += (bone_rot[:,0,2]**2).sum() * 0.05 # constrain pitch-axis rotation
     # part codes
-    loss += ((part_codes[1:,0]-0.05)**2).sum() * 0.05
-    loss += ((part_codes[0:,1]-1.1)**2).sum() * 0.05
-    loss += (F.relu(0.05-part_codes[...,0])**2).sum()
-    loss += (F.relu(1.1-part_codes[...,1])**2).sum()
+    # loss += ((part_codes[1:,0]-0.05)**2).sum() * 0.05
+    # loss += ((part_codes[0:,1]-1.1)**2).sum() * 0.05
+    # loss += (F.relu(0.05-part_codes[...,0])**2).sum()
+    # loss += (F.relu(1.1-part_codes[...,1])**2).sum()
     return loss / nb
 
 # general pose prior
@@ -102,10 +102,11 @@ def global_prior_loss(global_rot):
     loss = 0
     loss += (global_rot[:,0]**2).sum()
     loss += (global_rot[:,1]**2).sum() * 0.1
-    loss += (F.relu(-np.pi/2 + global_rot[:,2])**2).sum()
-    loss += (F.relu(-np.pi/2 - global_rot[:,2])**2).sum()
+    # loss += (F.relu(-np.pi/2 + global_rot[:,2])**2).sum()
+    # loss += (F.relu(-np.pi/2 - global_rot[:,2])**2).sum()
     return loss / bs
 
+# shape prior loss
 def shape_prior_loss(f_parts, uvs):
     nb = len(f_parts)
     loss = 0
@@ -114,6 +115,7 @@ def shape_prior_loss(f_parts, uvs):
         loss += (deform**2).mean() * 0.01
     return loss / nb
 
+# instance prior loss
 def instance_prior_loss(f_parts, uvs, f_instance, stop_at):
     nb = len(f_parts)
     loss = 0
@@ -151,3 +153,9 @@ def inflation_loss(verts, faces, eps=1e-5):
     loss += (((v1_t - v1)**2).sum(1) + eps).sqrt().mean()
     loss += (((v2_t - v2)**2).sum(1) + eps).sqrt().mean()
     return loss
+
+def mse_loss(text1, text2, valid=None):
+    loss = (text1 - text2)**2
+    if valid is not None:
+        loss *= valid
+    return loss.mean()

@@ -205,20 +205,6 @@ def mask_iou(m1, m2):
     intersection = (m1 * m2).sum()
     union = (m1 + m2).sum() - intersection
     return intersection / union if union > 0 else 0
-
-
-def plot_losses(losses, output_file):    
-    plt.figure()
-    for k in losses:
-        if k == 'shape_prior':
-            continue
-        try:
-            plt.plot([l.cpu().detach() for l in losses[k]], label=k)
-        except:
-            plt.plot([l for l in losses[k]], label=k)
-    plt.legend()
-    plt.savefig(osp.join(cfg.output_dir, output_file))
-    plt.close('all')
     
     
 def part_mask_to_image(part_mask, part_colors, img=None):
@@ -227,9 +213,9 @@ def part_mask_to_image(part_mask, part_colors, img=None):
         output[part_mask==p,:] = part_colors[p]
     if img is not None:
         output[:,:,3] = 1
-        output[part_mask==0,:3] = img[part_mask==0,::1]
+        output[part_mask==0,:3] = img[part_mask==0]
         output[part_mask>0,:3] *= 0.5
-        output[part_mask>0,:3] += img[part_mask>0,::1]*0.5
+        output[part_mask>0,:3] += img[part_mask>0]*0.5
     return (output[:,:,:3]*255.).astype(np.uint8)
 
 
