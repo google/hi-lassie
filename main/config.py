@@ -50,9 +50,9 @@ class Config:
     data_root = osp.join(root_dir, 'data')
     lassie_img_dir = osp.join(data_root, 'lassie', 'images')
     lassie_ann_dir = osp.join(data_root, 'lassie', 'annotations')
-    pascal_img_dir = '/hdd1/hank/JPEGImages/'
-    pascal_ann_dir = '/hdd1/hank/pascal-parts/Annotations_Part/'
-    pascal_img_set_dir = '/hdd1/hank/pascal-parts/image_sets/'
+    pascal_img_dir = osp.join(data_root, 'pascal_part', 'JPEGImages')
+    pascal_ann_dir = osp.join(data_root, 'pascal_part', 'Annotations_Part')
+    pascal_img_set_dir = osp.join(data_root, 'pascal_part', 'image_sets')
     
     device = torch.device("cuda")
     print('>>> Using device:', device)
