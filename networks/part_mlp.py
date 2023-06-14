@@ -18,22 +18,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from config import cfg
-        
-
-class HarmonicEmbedding(nn.Module):
-    def __init__(self, n_harmonic=10, first_harmonic=0, omega0=0.1):
-        super().__init__()
-        self.register_buffer("frequencies", omega0*(2.0**torch.arange(first_harmonic, first_harmonic+n_harmonic)),)
-
-    def forward(self, x):
-        embed = (x[..., None] * self.frequencies).reshape(*x.shape[:-1], -1)
-        return torch.cat((embed.sin(), embed.cos()), dim=-1)
-    
-
-class BaseNetwork(nn.Module):
-    def __init__(self, n_harmonic=10, first_harmonic=0, omega0=0.1):
-        super().__init__()
-        self.positional_encoding = HarmonicEmbedding(n_harmonic, first_harmonic, omega0)
     
     
 class PartMLP(nn.Module):

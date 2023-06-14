@@ -107,7 +107,7 @@ class Model(nn.Module):
             global_rot = self.global_rot
             bone_rot = self.bone_rot
         global_rot = euler_angles_to_matrix(global_rot, 'ZXY')
-        return global_scale*0.1+1, global_trans, global_rot, bone_rot          
+        return global_scale*0.1+1, global_trans, global_rot, bone_rot
 
     def freeze_parts(self, lev=0):
         self.bone_rot.grad[:,:,0] = 0
@@ -116,13 +116,10 @@ class Model(nn.Module):
             self.bone_scale.grad[self.skeleton.bones_lev[lev]] = 0
             self.part_codes.grad[self.skeleton.bones_lev[lev]] = 0
             
-    def freeze_instance(self, idx=0):
+    def freeze_instances_except(self, idx=0):
         for i in range(self.bone_rot.shape[0]):
             if i != idx:
                 self.bone_rot.grad[i] = 0
-
-    def init_feat_verts(self, feat_part, part_mapping):
-        self.feat_verts = feat_part[part_mapping]
 
     def update_feat_verts(self, verts_2d, feat_img, masks):
         with torch.no_grad():
@@ -152,15 +149,14 @@ class Model(nn.Module):
         joint2 = joints[:,self.skeleton.bones[1],:]
         bone_trans = (joint1 + joint2)*0.5
         bone_scale = ((joint1 - joint2)**2).sum(2).sqrt()*0.5
-        if True:
-            verts = uvs[None].repeat(cfg.nb,1,1)
-            if deform:
-                verts += torch.cat([f(uvs[None], stop_at) for f in self.f_parts], 0) # P x V x 3
-            s_xz = self.part_codes[:,None,0].clamp(0.05, 1.5)*2
-            s_y = self.part_codes[:,None,1].clamp(1.0, 2.0)
-            verts[:,:,0] *= s_xz
-            verts[:,:,2] *= s_xz
-            verts[:,:,1] *= s_y
+        verts = uvs[None].repeat(cfg.nb,1,1)
+        if deform:
+            verts += torch.cat([f(uvs[None], stop_at) for f in self.f_parts], 0) # P x V x 3
+        s_xz = self.part_codes[:,None,0].clamp(0.05, 1.5)*2
+        s_y = self.part_codes[:,None,1].clamp(1.0, 2.0)
+        verts[:,:,0] *= s_xz
+        verts[:,:,2] *= s_xz
+        verts[:,:,1] *= s_y
         verts *= bone_scale[0,:,None,None]
         verts = torch.bmm(self.skeleton.bone_rot_init, verts.permute(0,2,1)).permute(0,2,1) # P x V x 3
         if deform:
@@ -180,7 +176,7 @@ class Model(nn.Module):
             x[...,:2] += trans[:,None,:]
         return x
     
-    def get_view(self, verts, azimuth=None, view=0, gitter=0.0):
+    def get_view(self, verts, azimuth=None, gitter=0.0):
         bs = verts.shape[0]
         center = (verts.max(2)[0].max(1)[0] + verts.min(2)[0].min(1)[0])*0.5
         verts -= center[:,None,None,:]
@@ -289,11 +285,7 @@ class Model(nn.Module):
             # forward pass
             optimizer.zero_grad()
             if 'sil' in weights:
-                if cfg.opt_instance:
-                    # params['stop_at'] = 10
-                    params['stop_at'] = cfg.f_instance + j%5
-                else:
-                    params['stop_at'] = j%10
+                params['stop_at'] = cfg.f_instance + j%5 if cfg.opt_instance else j%10
             else:
                 params['stop_at'] = 10
             outputs = self.forward(inputs, deform=params['deform'], stop_at=params['stop_at'], text=params['text'])
@@ -307,7 +299,7 @@ class Model(nn.Module):
             if 'pose_prior' in weights:
                 self.freeze_parts(params['lev'])
                 if cfg.opt_instance:
-                    self.freeze_instance(cfg.instance_idx)
+                    self.freeze_instances_except(cfg.instance_idx)
             
             # update parameters
             optimizer.step()
@@ -319,7 +311,8 @@ class Model(nn.Module):
                 self.save_results(inputs, params, losses, output_prefix)
 
     def train(self, inputs):
-        self.init_feat_verts(inputs['feat_part'], self.part_mapping)
+        # initialize vertex features
+        self.feat_verts = inputs['feat_part'][self.part_mapping]
         
         print("========== Optimizing global pose... ========== ")
         var = [self.global_scale, self.global_trans, self.global_rot]
@@ -430,12 +423,11 @@ class Model(nn.Module):
         # animation
         if cfg.opt_instance:
             imgs = []
-            root_rot = self.rot_id[None,None,:]
             global_scale, global_trans, global_rot, bone_rot = self.get_instance_params(idx=0)
             for v in range(16):
                 w = v/7.5 if v < 15 else (30-v)/7.5
                 bone_rot2 = bone_rot * (1-w)
-                rot = torch.cat([root_rot, bone_rot2 + self.bone_rot_rest[None,:,:]], 1)
+                rot = torch.cat([self.rot_id[None,None,:], bone_rot2 + self.bone_rot_rest[None,:,:]], 1)
                 joints_can, joints_rot = self.skeleton.transform_joints(rot, scale=self.bone_scale)
                 verts_can = self.transform_verts(inputs['uvs'], joints_can, joints_rot, True, 10)
                 verts = self.global_transform(verts_can.reshape(1,-1,3), global_rot, global_trans, global_scale)
