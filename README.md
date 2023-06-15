@@ -49,7 +49,7 @@ python preprocess_lassie.py --cls zebra
 
 After preprocessing the input data, we extract a 3D skeleton from a specified reference image in the ensemble. For instance, run the following to use the 5-th instance as reference:
 ```
-python extract_skeleton.py --cls zebra --inst True --idx 5
+python extract_skeleton.py --cls zebra --idx 5
 ```
 
 To obtain better 3D outputs, we recommend selecting an instance where most body parts are visible (e.g. clear side-view). One can also see the DINO feature clustering results in `results/zebra/` to select a good reference or try running the optimization with different skeletons.

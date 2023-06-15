@@ -68,8 +68,7 @@ def preprocess_data():
             images.append(img)
     
     print("Extracting DINO features...")
-    extractor = VitExtractor(cfg.dino_model, cfg.device)        
-    images = [F.interpolate(img, cfg.crop_size, mode='bilinear', align_corners=False) for img in images]
+    extractor = VitExtractor(cfg.dino_model, cfg.device)
     with torch.no_grad():
         features, saliency = extractor.extract_feat_hr(images)
 

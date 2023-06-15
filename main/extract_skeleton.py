@@ -177,7 +177,6 @@ def find_symmetric_pairs(outputs):
 def lift_skeleton_to_3d(outputs):
     symmetry_pairs = find_symmetric_pairs(outputs)
     while len(symmetry_pairs) > 0:
-        print(symmetry_pairs)
         j1, j2 = symmetry_pairs
         outputs['joints'][j1,0] = -0.05
         outputs['joints'][j2,0] = 0.05
@@ -218,30 +217,35 @@ def extract_skeleton(masks):
     
     img_xy = np.arange(hw).astype(np.float32)
     grid_y, grid_x = np.meshgrid(img_xy, img_xy, indexing='ij')
-    feat_cons = np.ones((8))
-    feat_all = np.zeros((bs,8))
+    cluster_present = np.ones((cfg.n_clusters))
+    cluster_xy = np.zeros((bs,cfg.n_clusters,2))
     for i in range(bs):
-        sil_x = grid_x[masks[i,0]>0]
-        cent_x = np.mean(sil_x)
-        for j in range(8):
+        cent_x = np.mean(grid_x[masks[i,0]>0])
+        cent_y = np.mean(grid_y[masks[i,0]>0])
+        for j in range(cfg.n_clusters):
             m = masks[i,0] == j+1
             if np.sum(m) == 0:
-                feat_cons[j] = 0
+                cluster_present[j] = 0
             else:
                 part_cent_x = np.mean(grid_x[m])
-                feat_all[i,j] = (part_cent_x - cent_x)
+                part_cent_y = np.mean(grid_y[m])
+                cluster_xy[i,j,0] = (part_cent_x - cent_x)
+                cluster_xy[i,j,1] = (part_cent_y - cent_y)
                 
-    feat_mean = np.mean(np.abs(feat_all), axis=0)
-    # face_cluster = np.argmax(feat_mean*feat_cons)
-    face_cluster = np.argmax(feat_mean)
+    cluster_x_mean = np.mean(np.abs(cluster_xy[:,:,0]), axis=0)
+    anchor_cluster = np.argmax(cluster_x_mean * cluster_present)
+    # anchor_cluster = np.argmax(cluster_x_mean)
+    anchor_is_head = np.mean(cluster_xy[:,anchor_cluster,1]) < 0
     facing_right = np.ones(bs).astype(np.float32)
     for i in range(bs):
-        if feat_all[i,face_cluster] < 0:
-            facing_right[i] *= -1
-            feat_all[i] *= -1
+        flip = anchor_is_head and cluster_xy[i,anchor_cluster,0] < 0
+        flip = flip or (not anchor_is_head and cluster_xy[i,anchor_cluster,0] > 0)
+        if flip:
+            facing_right[i] = -1
+            cluster_xy[i,:,0] *= -1
             masks[i,0,:,:] = masks[i,0,:,::-1]
 
-    indices = np.argsort(np.mean(np.abs(feat_all), axis=1))
+    indices = np.argsort(np.mean(np.abs(cluster_xy[:,:,0]), axis=1))
     azim = np.arange(bs).astype(np.float32)/(bs-1)
     azim *= np.pi/2
     azim = np.stack([facing_right[i] * azim[np.where(indices==i)[0][0]] for i in range(bs)])
