@@ -405,7 +405,7 @@ class Model(nn.Module):
                 save_img('%stext_%d.png'%(prefix, idx), img2np(img_text))
                 
         # part and texture gifs
-        if prefix == '' or cfg.opt_instance:
+        if cfg.opt_instance:
             for i in range(num_imgs):
                 print('Rendering instance %d...' % i)
                 idx = cfg.instance_idx if cfg.opt_instance else i
@@ -425,7 +425,7 @@ class Model(nn.Module):
             imgs = []
             global_scale, global_trans, global_rot, bone_rot = self.get_instance_params(idx=0)
             for v in range(16):
-                w = v/7.5 if v < 15 else (30-v)/7.5
+                w = v/7.5
                 bone_rot2 = bone_rot * (1-w)
                 rot = torch.cat([self.rot_id[None,None,:], bone_rot2 + self.bone_rot_rest[None,:,:]], 1)
                 joints_can, joints_rot = self.skeleton.transform_joints(rot, scale=self.bone_scale)
@@ -438,29 +438,19 @@ class Model(nn.Module):
             save_img('%sanimation_%d.gif'%(prefix, cfg.instance_idx), imgs + imgs_rev)
 
     def save_model(self, model_path):
-        print(self.state_dict().keys())
-        state_dict = {'main': self.state_dict()}
-        for i, f in enumerate(self.f_parts):
-            state_dict['f_part_%d'%i] = f.state_dict()
-        torch.save(state_dict, model_path)
+        torch.save(self.state_dict(), model_path)
         
     def load_model(self, model_path, load_parts=True, freeze_to=None):
         checkpoint = torch.load(model_path, map_location=self.device)
-        self.load_state_dict(checkpoint['main'], strict=False)
-        if load_parts:
+        self.load_state_dict(checkpoint, strict=False)
+        if load_parts and freeze_to is not None:
             for i, f in enumerate(self.f_parts):
-                # f.load_state_dict(checkpoint['f_part_%d'%i])
-                if freeze_to is not None:
-                    f.freeze_layers(freeze_to)
+                f.freeze_layers(freeze_to)
         
     def save_parts(self, model_path):
-        state_dict = {}
-        for i, f in enumerate(self.f_parts):
-            state_dict['f_part_%d'%i] = f.state_dict()
-        torch.save(state_dict, model_path)
+        torch.save(self.f_parts.state_dict(), model_path)
         
     def load_parts(self, model_path):
         checkpoint = torch.load(model_path, map_location=self.device)
-        for i, f in enumerate(self.f_parts):
-            f.load_state_dict(checkpoint['f_part_%d'%i])
+        self.f_parts.load_state_dict(checkpoint, strict=False)
         

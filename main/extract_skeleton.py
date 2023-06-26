@@ -112,16 +112,18 @@ def get_2d_skeleton(outputs, mask):
     endpoints = np.array(endpoints_filtered)
     
     # filter junction and endpoints
+    thres_dist_endpoints = 1.0
+    thres_dist_junctions = 0.8
     for i1 in range(junctions.shape[0]):
         for i2 in range(endpoints.shape[0]):
             p1, p2 = junctions[i1].copy(), endpoints[i2].copy()
-            if p2 >= 0 and np.sum((pts[p1,:2]-pts[p2,:2])**2) < pts[p1,2]**2:
+            if p2 >= 0 and np.sum((pts[p1,:2]-pts[p2,:2])**2) < (pts[p1,2]*thres_dist_endpoints)**2:
                 ancestors[p2] = 0
                 endpoints[i2] = -1
     for i1 in range(junctions.shape[0]):
         for i2 in range(i1+1, junctions.shape[0]):
             p1, p2 = junctions[i1].copy(), junctions[i2].copy()
-            if p2 >= 0 and np.sum((pts[p1,:2]-pts[p2,:2])**2) < pts[p1,2]**2:
+            if p2 >= 0 and np.sum((pts[p1,:2]-pts[p2,:2])**2) < (pts[p1,2]*thres_dist_junctions)**2:
                 junctions[i2] = -1
                 ancestors = np.where(ancestors == p2, p1, ancestors)                
     endpoints = np.stack([j for j in endpoints if j>=0], 0)

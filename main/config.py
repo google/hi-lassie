@@ -34,7 +34,7 @@ class Config:
     dino_model = 'dino_vits8' # 'dino_vits8' / 'dinov2_vits14'
     ps = 8 if dino_model == 'dino_vits8' else 14 # patch size
     crop_size = (ps*128, ps*128) # image resolution for DINO feature extraction
-    input_size = (384, 384) # image resolution for rendering and optimization
+    input_size = (512, 512) # image resolution for rendering and optimization
     hw = 64 # height and width of feature maps
     
     # optimization settings

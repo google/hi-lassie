@@ -28,6 +28,16 @@ pip install -r requirements.txt
 
 ## Data preparation
 
+### LASSIE web images (zebra, giraffe, tiger, elephant, kangaroo, penguin)
+* Download LASSIE images following [here](https://github.com/google/lassie) and place them in `data/lassie/images/`.
+* Download LASSIE annotations following [here](https://github.com/google/lassie) and place them in `data/lassie/annotations/`.
+* Preprocess LASSIE images and extract DINO features of an animal class (e.g. zebra) by running:
+```
+python preprocess_lassie.py --cls zebra
+```
+To accelerate feature clustering, try setting number of threads lower (e.g. `OMP_NUM_THREADS=4`).
+
+
 ### Pascal-part (horse, cow, sheep)
 * Download Pascal images [here](http://host.robots.ox.ac.uk/pascal/VOC/voc2010/#devkit) and place them in `data/pascal_part/JPEGImages/`.
 * Download Pascal-part annotations [here](http://roozbehm.info/pascal-parts/pascal-parts.html) and place them in `data/pascal_part/Annotations_Part/`.
@@ -37,13 +47,6 @@ pip install -r requirements.txt
 python preprocess_pascal.py --cls horse
 ```
 
-### LASSIE web images (zebra, giraffe, tiger, elephant, kangaroo, penguin)
-* Download LASSIE images following [here](https://github.com/google/lassie) and place them in `data/lassie/images/`.
-* Download LASSIE annotations following [here](https://github.com/google/lassie) and place them in `data/lassie/annotations/`.
-* Preprocess LASSIE images and extract DINO features of an animal class (e.g. zebra) by running:
-```
-python preprocess_lassie.py --cls zebra
-```
 
 ## Skeleton extraction
 
@@ -68,7 +71,7 @@ After the joint optimization, we perform instance-specific fine-tuning on a part
 python train.py --cls zebra --inst True --idx 0
 ```
 
-The qualitative results can be found in `results/zebra/`. The optimization settings can be changed in `main/config.py`.
+The qualitative results can be found in `results/zebra/`. The optimization settings can be changed in `main/config.py`. For instance, one can reduce the rendering resolution by setting `input_size` if out of memory.
 
 
 ## Evaluation

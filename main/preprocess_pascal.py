@@ -40,16 +40,16 @@ def preprocess_data():
     
     img_list = osp.join(cfg.pascal_img_set_dir, '%s.txt'%cfg.animal_class)
     with open(img_list, 'r') as f:
-        img_files = [cfg.pascal_img_dir + img_file.replace('\n','') for img_file in f.readlines()]
+        img_files = [img_file.replace('\n','') for img_file in f.readlines()]
         
     for i, img in enumerate(img_files):
         img_id = img.split('/')[-1].replace('.jpg','')
-        ann_file = osp.join(cfg.pascal_ann_dir, img.split('/')[-1].replace('.jpg', '.mat'))
+        ann_file = osp.join(cfg.pascal_ann_dir, img_id + '.mat')
         ann = loadmat(ann_file)
         obj = ann['anno'][0,0]['objects'][0,0]
         parts = obj["parts"]
-
-        img = cv2.imread(img)[:,:,2::-1]/255.
+        
+        img = cv2.imread(osp.join(cfg.pascal_img_dir, img))[:,:,2::-1]/255.
         part_mask = np.zeros(img.shape[:2], dtype=np.uint8)
         part_centers = np.zeros((16,3))
         keypoints = np.zeros((14,3))
